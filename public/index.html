@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activité 4 – Comptage des phénotypes de F2</title>
+<style>
+  :root {
+    --ink: #1f2933; --grey: #5b6670; --rule: #c9cfd4; --soft: #eef0f2; --paper: #ffffff;
+    --accent: #2f4858; --ok: #2e6b3f; --warn: #8a5a00;
+    --c1: #2f4858; --c2: #6f8a99; --c3: #b08968; --c4: #d8c3a5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f6f7f8; color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Calibri, sans-serif; }
+  header { background: var(--soft); border-bottom: 2px solid var(--ink); text-align: center; padding: 14px 12px 12px; }
+  header h1 { margin: 0; font-size: 1.35rem; }
+  header p { margin: 2px 0 0; color: var(--grey); font-weight: 600; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px 12px 48px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab { flex: 1; padding: 12px; font: inherit; font-weight: 700; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; color: var(--grey); }
+  .tab[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 10px; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--grey); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+  label, .lbl { font-weight: 600; font-size: .9rem; }
+  select, input[type=text], input[type=number], input[type=password] { font: inherit; padding: 10px; border: 1px solid #98a1a8; border-radius: 6px; background: #fff; width: 100%; }
+  .info { margin: 10px 0 0; padding: 8px 10px; border-radius: 6px; background: var(--soft); font-size: .92rem; }
+  .info.warn { background: #fbf1dc; color: var(--warn); }
+  .info a { color: inherit; font-weight: 700; }
+  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 14px; }
+  .counter { border: 1px solid var(--rule); border-radius: 8px; padding: 10px; text-align: center; }
+  .counter .name { font-size: .88rem; font-weight: 600; min-height: 2.6em; display: flex; align-items: center; justify-content: center; }
+  .counter .stepper { display: flex; align-items: stretch; gap: 6px; margin-top: 6px; }
+  .counter button { width: 46px; font-size: 1.4rem; font-weight: 700; border: 1px solid #98a1a8; background: var(--soft); border-radius: 6px; cursor: pointer; }
+  .counter input { text-align: center; font-size: 1.4rem; font-weight: 700; padding: 8px 2px; -moz-appearance: textfield; }
+  .counter input::-webkit-outer-spin-button, .counter input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .total { margin-top: 12px; font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  button.primary { font: inherit; font-weight: 700; padding: 12px 22px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+  button.ghost { font: inherit; font-weight: 600; padding: 10px 16px; border: 1px solid #98a1a8; border-radius: 8px; background: #fff; cursor: pointer; }
+  button.danger { color: #8c1d18; border-color: #c98b88; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .msg { font-weight: 600; }
+  .msg.ok { color: var(--ok); } .msg.err { color: #8c1d18; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid var(--rule); padding: 6px 8px; text-align: center; }
+  th { background: var(--soft); font-weight: 700; }
+  td.left, th.left { text-align: left; white-space: nowrap; }
+  tr.none td { color: #9aa3aa; }
+  tfoot td { font-weight: 700; background: #f6f7f8; }
+  .badge { display: inline-block; min-width: 1.6em; padding: 0 6px; border-radius: 999px; font-size: .78rem; font-weight: 700; background: var(--soft); border: 1px solid var(--rule); }
+  .badge.multi { background: #fbf1dc; border-color: #e2c27d; color: var(--warn); }
+  .scroll { overflow-x: auto; }
+  .bars { display: grid; gap: 8px; margin-top: 4px; }
+  .bar { display: grid; grid-template-columns: minmax(130px, 34%) 1fr 64px; align-items: center; gap: 8px; font-size: .9rem; }
+  .bar .track { background: var(--soft); border-radius: 4px; height: 22px; overflow: hidden; }
+  .bar .fill { height: 100%; transition: width .4s; }
+  .bar .pct { text-align: right; font-weight: 700; }
+  .mine { display: grid; gap: 6px; }
+  .mine .it { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: .92rem; }
+  .small { font-size: .85rem; color: var(--grey); }
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 12px 30px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .prof { border: 2px dashed var(--ink); }
+  .hidden { display: none !important; }
+  @media (max-width: 560px) { .bar { grid-template-columns: 1fr 56px; } .bar .track { grid-column: 1 / -1; order: 3; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Activité 4 – Formation des phénotypes recombinés</h1>
+  <p>Mise en commun des comptages de la classe</p>
+</header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-droso" aria-selected="true" data-org="droso">Drosophile</button>
+    <button class="tab" role="tab" id="tab-pois" aria-selected="false" data-org="pois">Pois</button>
+  </div>
+
+  <section class="card" aria-labelledby="h-saisie">
+    <h2 id="h-saisie">Mon comptage</h2>
+    <div class="row">
+      <div class="field">
+        <label for="groupe">Mon groupe</label>
+        <input type="text" id="groupe" maxlength="24" placeholder="ex. Groupe 3" autocomplete="off">
+      </div>
+      <div class="field" style="flex:2">
+        <label for="item" id="item-label">Échantillon compté</label>
+        <select id="item"></select>
+      </div>
+    </div>
+    <p class="info hidden" id="item-info"></p>
+    <div class="counters" id="counters"></div>
+    <div class="total" id="total"></div>
+    <div class="actions">
+      <button class="primary" id="send">Envoyer mon comptage</button>
+      <button class="ghost hidden" id="cancel-edit">Annuler la correction</button>
+      <span class="msg" id="msg" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card hidden" id="mine-card" aria-labelledby="h-mine">
+    <h2 id="h-mine">Mes saisies sur cet appareil</h2>
+    <div class="mine" id="mine"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-bilan">
+    <h2 id="h-bilan">Bilan de la classe <span class="small" id="stamp"></span></h2>
+    <div class="scroll"><table id="bilan"></table></div>
+    <p class="small" id="bilan-note"></p>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="card prof hidden" id="prof-card">
+    <h2>Vue enseignant</h2>
+    <div class="actions" style="margin-top:0">
+      <button class="ghost" id="csv">Exporter en CSV</button>
+      <button class="ghost danger" id="reset">Vider cet onglet</button>
+      <button class="ghost" id="logout">Quitter</button>
+    </div>
+    <div class="scroll" style="margin-top:10px"><table id="detail"></table></div>
+  </section>
+</main>
+
+<footer>
+  <span class="small">Les saisies sont anonymes (numéro de groupe uniquement).</span>
+  <button class="ghost" id="prof-btn">Enseignant</button>
+</footer>
+
+<script>
+"use strict";
+const MESURIM = "https://www.pedagogie.ac-nice.fr/svt/productions/mesurim2/?c=";
+const CONFIG = {
+  droso: {
+    titre: "Drosophile",
+    itemLabel: "Lame ou image de drosophiles F2 comptée",
+    phenos: [
+      { code: "Vg+ eb+", nom: "Ailes longues · corps gris-jaune" },
+      { code: "Vg+ eb",  nom: "Ailes longues · corps noir" },
+      { code: "Vg eb+",  nom: "Ailes courtes · corps gris-jaune" },
+      { code: "Vg eb",   nom: "Ailes courtes · corps noir" },
+    ],
+    items: [
+      ...[1, 2, 3, 4, 5, 6].map(n => ({ id: "L" + n, nom: "Lame " + n })),
+      ...["AABH", "AABI", "AABJ", "AABK", "AABL", "AABM", "AABN", "AABO"].map(c => ({ id: c, nom: "Image " + c, url: MESURIM + c })),
+    ],
+    refs: [{ nom: "Image des parents (P)", url: MESURIM + "AABF" }, { nom: "Image de la F1", url: MESURIM + "AABG" }],
+  },
+  pois: {
+    titre: "Pois",
+    itemLabel: "Boîte de pois F2 comptée",
+    phenos: [
+      { code: "Jaune lisse", nom: "Jaune · lisse" },
+      { code: "Jaune ridé",  nom: "Jaune · ridé" },
+      { code: "Vert lisse",  nom: "Vert · lisse" },
+      { code: "Vert ridé",   nom: "Vert · ridé" },
+    ],
+    items: Array.from({ length: 14 }, (_, i) => ({ id: "B" + (i + 1), nom: "Boîte " + (i + 1) })),
+    refs: [],
+  },
+};
+const COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+let org = "droso";
+let entries = [];
+let editing = null;           // saisie en cours de correction
+let profKey = null;
+try { profKey = sessionStorage.getItem("profKey"); } catch {}
+
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => (Math.random() * 16 | 0).toString(16)));
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (n, d = 1) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: d });
+const api = async (method, qs = "", body, key) => {
+  const r = await fetch("/api/results" + qs, {
+    method, headers: { "content-type": "application/json", ...(key ? { "x-teacher-key": key } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "Erreur " + r.status);
+  return j;
+};
+
+/* ---------- calculs ---------- */
+function synthese(o) {
+  const cfg = CONFIG[o];
+  const parItem = {};
+  entries.filter(e => e.org === o).forEach(e => (parItem[e.item] = parItem[e.item] || []).push(e));
+  const lignes = cfg.items.map(it => {
+    const liste = parItem[it.id] || [];
+    const n = liste.length;
+    const moy = n ? [0, 1, 2, 3].map(i => liste.reduce((s, e) => s + e.counts[i], 0) / n) : null;
+    return { it, n, moy };
+  });
+  const totaux = [0, 1, 2, 3].map(i => lignes.reduce((s, l) => s + (l.moy ? l.moy[i] : 0), 0));
+  const somme = totaux.reduce((a, b) => a + b, 0);
+  return { lignes, totaux, somme, pct: totaux.map(t => (somme ? t / somme * 100 : 0)) };
+}
+
+/* ---------- affichage ---------- */
+function renderItems() {
+  const cfg = CONFIG[org], sy = synthese(org);
+  const cur = $("#item").value;
+  $("#item-label").textContent = cfg.itemLabel;
+  const html = '<option value="">— choisir —</option>' + sy.lignes.map(l =>
+    `<option value="${l.it.id}">${esc(l.it.nom)} — ${l.n === 0 ? "pas encore comptée" : l.n + " comptage" + (l.n > 1 ? "s" : "")}</option>`).join("");
+  if ($("#item").dataset.html !== html) {   // ne reconstruit la liste que si elle change (évite de refermer le menu ouvert)
+    $("#item").innerHTML = html; $("#item").dataset.html = html;
+    if (cur && cfg.items.some(i => i.id === cur)) $("#item").value = cur;
+  }
+  renderItemInfo();
+}
+function renderItemInfo() {
+  const cfg = CONFIG[org], id = $("#item").value, box = $("#item-info");
+  const refs = cfg.refs.map(r => `<a href="${r.url}" target="_blank" rel="noopener">${esc(r.nom)}</a>`).join(" · ");
+  if (!id) { box.className = "info" + (refs ? "" : " hidden"); box.innerHTML = refs ? "Images de référence : " + refs : ""; return; }
+  const it = cfg.items.find(i => i.id === id);
+  const n = synthese(org).lignes.find(l => l.it.id === id).n;
+  const autres = editing ? n - 1 : n;
+  let html = "";
+  if (it.url) html += `<a href="${it.url}" target="_blank" rel="noopener">Ouvrir ${esc(it.nom)} dans Mesurim 2</a>. `;
+  if (autres > 0) { box.className = "info warn"; html += `Cet échantillon a déjà été compté par ${autres} groupe${autres > 1 ? "s" : ""}. Tu peux le compter aussi : le bilan fera la moyenne. Si tu préfères, choisis un échantillon pas encore compté.`; }
+  else { box.className = "info"; html += "Personne n'a encore compté cet échantillon."; }
+  if (refs) html += "<br>Images de référence : " + refs;
+  box.innerHTML = html;
+}
+function renderCounters(values = [0, 0, 0, 0]) {
+  $("#counters").innerHTML = CONFIG[org].phenos.map((p, i) => `
+    <div class="counter">
+      <div class="name">${esc(p.nom)}<span class="small">&nbsp;(${esc(p.code)})</span></div>
+      <div class="stepper">
+        <button type="button" data-i="${i}" data-d="-1" aria-label="Retirer 1 : ${esc(p.nom)}">−</button>
+        <input type="number" inputmode="numeric" min="0" max="999" step="1" value="${values[i]}" data-i="${i}" aria-label="Effectif : ${esc(p.nom)}">
+        <button type="button" data-i="${i}" data-d="1" aria-label="Ajouter 1 : ${esc(p.nom)}">+</button>
+      </div>
+    </div>`).join("");
+  updateTotal();
+}
+const readCounts = () => [...document.querySelectorAll("#counters input")].map(i => parseInt(i.value, 10));
+function updateTotal() {
+  const c = readCounts().map(n => (Number.isInteger(n) ? n : 0));
+  $("#total").textContent = "Total compté : " + c.reduce((a, b) => a + b, 0);
+}
+function renderBilan() {
+  const cfg = CONFIG[org], sy = synthese(org);
+  const heads = cfg.phenos.map(p => `<th>${esc(p.nom)}<br><span class="small">${esc(p.code)}</span></th>`).join("");
+  const rows = sy.lignes.map(l => l.moy
+    ? `<tr><td class="left">${esc(l.it.nom)}</td><td><span class="badge ${l.n > 1 ? "multi" : ""}">${l.n}</span></td>${l.moy.map(m => `<td>${fmt(m)}</td>`).join("")}<td>${fmt(l.moy.reduce((a, b) => a + b, 0))}</td></tr>`
+    : `<tr class="none"><td class="left">${esc(l.it.nom)}</td><td><span class="badge">0</span></td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>`).join("");
+  $("#bilan").innerHTML = `<thead><tr><th class="left">${org === "pois" ? "Boîte" : "Échantillon"}</th><th>Nb de comptages</th>${heads}<th>Total</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><td class="left" colspan="2">Total de la classe</td>${sy.totaux.map(t => `<td>${fmt(t)}</td>`).join("")}<td>${fmt(sy.somme)}</td></tr>
+    <tr><td class="left" colspan="2">Proportions (%)</td>${sy.pct.map(p => `<td>${fmt(p)}</td>`).join("")}<td>${sy.somme ? "100" : "–"}</td></tr></tfoot>`;
+  const multi = sy.lignes.filter(l => l.n > 1).length;
+  $("#bilan-note").textContent = multi
+    ? `${multi} échantillon${multi > 1 ? "s ont" : " a"} été compté${multi > 1 ? "s" : ""} plusieurs fois : chacun n'est pris qu'une fois dans les totaux (moyenne des comptages).`
+    : "Un échantillon compté par plusieurs groupes n'est pris qu'une fois dans les totaux (moyenne des comptages).";
+  $("#bars").innerHTML = cfg.phenos.map((p, i) => `
+    <div class="bar"><span>${esc(p.nom)}</span>
+      <span class="track"><span class="fill" style="display:block;width:${sy.pct[i].toFixed(1)}%;background:${COLORS[i]}"></span></span>
+      <span class="pct">${sy.somme ? fmt(sy.pct[i]) + " %" : "–"}</span></div>`).join("");
+}
+function renderMine() {
+  const mine = store.get("mesSaisies", []).filter(m => m.org === org);
+  const exist = new Set(entries.map(e => e.id).filter(Boolean));
+  $("#mine-card").classList.toggle("hidden", mine.length === 0);
+  const cfg = CONFIG[org];
+  $("#mine").innerHTML = mine.map(m => {
+    const it = cfg.items.find(i => i.id === m.item);
+    return `<div class="it"><span><b>${esc(it ? it.nom : m.item)}</b> · ${m.counts.join(" / ")} <span class="small">(${esc(m.group)})</span></span>
+      <span><button class="ghost" data-edit="${m.id}">Corriger</button> <button class="ghost danger" data-del="${m.id}">Supprimer</button></span></div>`;
+  }).join("");
+}
+function renderDetail() {
+  const on = !!profKey;
+  $("#prof-card").classList.toggle("hidden", !on);
+  $("#prof-btn").classList.toggle("hidden", on);
+  if (!on) return;
+  const cfg = CONFIG[org];
+  const rows = entries.filter(e => e.org === org).sort((a, b) => b.ts - a.ts).map(e => {
+    const it = cfg.items.find(i => i.id === e.item);
+    return `<tr><td class="left">${esc(e.group)}</td><td class="left">${esc(it ? it.nom : e.item)}</td>${e.counts.map(c => `<td>${c}</td>`).join("")}<td>${new Date(e.ts).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</td><td><button class="ghost danger" data-pdel="${e.id}">Supprimer</button></td></tr>`;
+  }).join("");
+  $("#detail").innerHTML = `<thead><tr><th class="left">Groupe</th><th class="left">Échantillon</th>${cfg.phenos.map(p => `<th>${esc(p.code)}</th>`).join("")}<th>Heure</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="8">Aucune saisie.</td></tr>'}</tbody>`;
+}
+function renderAll() { renderItems(); renderBilan(); renderMine(); renderDetail(); }
+
+/* ---------- données ---------- */
+async function refresh() {
+  try {
+    const j = await api("GET", "", null, profKey);
+    entries = j.entries;
+    $("#stamp").textContent = "· mis à jour à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    renderItems(); renderBilan(); renderMine(); renderDetail();
+  } catch (e) { $("#stamp").textContent = "· hors ligne"; }
+}
+function flash(text, cls) { const m = $("#msg"); m.textContent = text; m.className = "msg " + cls; if (cls === "ok") setTimeout(() => { if (m.textContent === text) m.textContent = ""; }, 4000); }
+
+async function send() {
+  const group = $("#groupe").value.trim(), item = $("#item").value, counts = readCounts();
+  if (!group) return flash("Indique ton groupe.", "err");
+  if (!item) return flash("Choisis l'échantillon que tu as compté.", "err");
+  if (!counts.every(n => Number.isInteger(n) && n >= 0 && n <= 999)) return flash("Les 4 effectifs doivent être des entiers entre 0 et 999.", "err");
+  if (counts.every(n => n === 0) && !confirm("Les 4 effectifs sont à 0. Envoyer quand même ?")) return;
+  store.set("groupe", group);
+  const id = editing ? editing.id : uuid();
+  $("#send").disabled = true;
+  try {
+    await api("POST", "", { id, org, item, group, counts });
+    const mine = store.get("mesSaisies", []).filter(m => m.id !== id);
+    mine.unshift({ id, org, item, group, counts });
+    store.set("mesSaisies", mine);
+    flash(editing ? "Correction enregistrée ✔" : "Comptage envoyé ✔", "ok");
+    stopEdit(); $("#item").value = ""; renderCounters(); await refresh();
+  } catch (e) { flash(e.message, "err"); }
+  finally { $("#send").disabled = false; }
+}
+function startEdit(id) {
+  const m = store.get("mesSaisies", []).find(x => x.id === id); if (!m) return;
+  if (m.org !== org) switchOrg(m.org);
+  editing = m; $("#groupe").value = m.group; $("#item").value = m.item; renderCounters(m.counts); renderItemInfo();
+  $("#send").textContent = "Enregistrer la correction"; $("#cancel-edit").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function stopEdit() { editing = null; $("#send").textContent = "Envoyer mon comptage"; $("#cancel-edit").classList.add("hidden"); }
+function switchOrg(o) {
+  org = o; stopEdit(); $("#msg").textContent = "";
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.org === o));
+  $("#item").value = ""; renderCounters(); renderAll();
+}
+
+/* ---------- événements ---------- */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchOrg(t.dataset.org)));
+$("#item").addEventListener("change", renderItemInfo);
+$("#send").addEventListener("click", send);
+$("#cancel-edit").addEventListener("click", () => { stopEdit(); $("#item").value = ""; renderCounters(); renderItemInfo(); });
+$("#counters").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-d]"); if (!b) return;
+  const inp = document.querySelector(`#counters input[data-i="${b.dataset.i}"]`);
+  inp.value = Math.max(0, Math.min(999, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.d, 10))); updateTotal();
+});
+$("#counters").addEventListener("input", updateTotal);
+$("#counters").addEventListener("focusin", (e) => { if (e.target.matches("input")) e.target.select(); });
+$("#mine").addEventListener("click", async (e) => {
+  const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+  if (ed) startEdit(ed.dataset.edit);
+  if (del) {
+    const m = store.get("mesSaisies", []).find(x => x.id === del.dataset.del); if (!m || !confirm("Supprimer cette saisie ?")) return;
+    try { await api("DELETE", `?id=${m.id}&org=${m.org}`); } catch (er) { return flash(er.message, "err"); }
+    store.set("mesSaisies", store.get("mesSaisies", []).filter(x => x.id !== m.id)); if (editing && editing.id === m.id) stopEdit(); refresh();
+  }
+});
+$("#groupe").value = store.get("groupe", "");
+
+/* enseignant */
+$("#prof-btn").addEventListener("click", async () => {
+  const k = prompt("Clé enseignant :"); if (!k) return;
+  try { const j = await api("GET", "?check=1", null, k); if (!j.prof) return alert("Clé incorrecte."); }
+  catch (e) { return alert(e.message); }
+  profKey = k; try { sessionStorage.setItem("profKey", k); } catch {} refresh();
+});
+$("#logout").addEventListener("click", () => { profKey = null; try { sessionStorage.removeItem("profKey"); } catch {} refresh(); });
+$("#detail").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-pdel]"); if (!b || !confirm("Supprimer cette ligne ?")) return;
+  try { await api("DELETE", `?id=${b.dataset.pdel}&org=${org}`, null, profKey); } catch (er) { return alert(er.message); } refresh();
+});
+$("#reset").addEventListener("click", async () => {
+  if (!confirm("Supprimer TOUTES les saisies de l'onglet « " + CONFIG[org].titre + " » ?")) return;
+  try { await api("DELETE", `?all=1&org=${org}`, null, profKey); } catch (er) { return alert(er.message); } refresh();
+});
+$("#csv").addEventListener("click", () => {
+  const cfg = CONFIG[org], q = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  const lines = [["groupe", "echantillon", ...cfg.phenos.map(p => p.code), "heure"].map(q).join(";")];
+  entries.filter(e => e.org === org).forEach(e => {
+    const it = cfg.items.find(i => i.id === e.item);
+    lines.push([e.group, it ? it.nom : e.item, ...e.counts, new Date(e.ts).toISOString()].map(q).join(";"));
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));
+  a.download = "comptage_" + org + ".csv"; a.click(); URL.revokeObjectURL(a.href);
+});
+
+renderCounters(); renderAll(); refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+</script>
+</body>
+</html>
